@@ -7,12 +7,6 @@ using CloudDesk.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await db.Database.EnsureCreatedAsync();
-}
-
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
@@ -33,10 +27,17 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 // MVC
 builder.Services.AddControllersWithViews();
 
-// ⭐ SignalR
+// SignalR
 builder.Services.AddSignalR();
 
 var app = builder.Build();
+
+// Create database
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -57,9 +58,10 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");
 
-// ⭐ SignalR Hub
+// SignalR Hub
 app.MapHub<ChatHub>("/chatHub");
 
+// Seed data
 await SeedData.CreateAsync(app.Services);
 
 app.Run();
