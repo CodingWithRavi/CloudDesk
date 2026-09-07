@@ -1,0 +1,192 @@
+﻿@model CloudDesk.Models.LoginViewModel
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>CloudDesk</title>
+
+    <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-family: Arial, sans-serif;
+                background: #0f172a;
+            }
+
+            .login-box {
+                width: 380px;
+                padding: 40px;
+                border-radius: 24px;
+                background: #ffffff;
+                box-shadow: 0 25px 70px rgba(0,0,0,.35);
+            }
+
+            .logo {
+                text-align: center;
+                font-size: 32px;
+                font-weight: 700;
+                margin-bottom: 8px;
+            }
+
+            .subtitle {
+                text-align: center;
+                color: #64748b;
+                margin-bottom: 30px;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
+            }
+
+            label {
+                display: block;
+                margin-bottom: 7px;
+                font-weight: 600;
+            }
+
+            input {
+                width: 100%;
+                padding: 13px 15px;
+                border: 1px solid #cbd5e1;
+                border-radius: 12px;
+                font-size: 15px;
+                outline: none;
+            }
+
+            input:focus {
+                border-color: #6366f1;
+            }
+
+            .login-btn {
+                width: 100%;
+                border: none;
+                padding: 14px;
+                border-radius: 12px;
+                background: #6366f1;
+                color: white;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+            .login-btn:hover {
+                background: #4f46e5;
+            }
+
+            .error {
+                color: #dc2626;
+                margin-bottom: 15px;
+                font-size: 14px;
+            }
+
+            .remember {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 20px;
+                font-size: 14px;
+            }
+
+            .remember input {
+                width: auto;
+            }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-box">
+
+        <div class="logo">CloudDesk</div>
+
+        <div class="subtitle">
+            Sign in to continue
+        </div>
+
+        <form asp-controller="Account"
+              asp-action="Login"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly"
+                 class="error"></div>
+
+            <div class="form-group">
+                <label asp-for="Username">Username</label>
+
+                <input asp-for="Username"
+                       placeholder="Enter username"
+                       autocomplete="username" />
+
+                <span asp-validation-for="Username"
+                      class="error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password">Password</label>
+
+                <input asp-for="Password"
+                       placeholder="Enter password"
+                       autocomplete="current-password" />
+
+                <span asp-validation-for="Password"
+                      class="error"></span>
+            </div>
+
+            <div class="remember">
+                <input asp-for="RememberMe" />
+                <label asp-for="RememberMe">Remember me</label>
+            </div>
+
+            <button type="submit" class="login-btn">
+                Sign In
+            </button>
+
+            <a href="#" id="forgotPasswordLink">
+                Forgot Password?
+            </a>
+
+        </form>
+
+    </div>
+    <script>
+
+            document.getElementById(
+                "forgotPasswordLink"
+            ).addEventListener(
+                "click",
+                function(event) {
+
+                    event.preventDefault();
+
+                    const username =
+                        document.querySelector(
+                            '[name="Username"]'
+                        ).value;
+
+                    window.location.href =
+                        "/Account/ForgotPassword?username="
+                        + encodeURIComponent(username);
+
+                }
+            );
+
+    </script>
+
+</body>
+</html>

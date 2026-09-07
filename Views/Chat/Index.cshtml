@@ -1,0 +1,1645 @@
+﻿@{
+    Layout = null;
+
+    bool isViewer = ViewBag.IsViewer ?? false;
+    string displayName = ViewBag.DisplayName ?? "User";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>CloudDesk</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet" />
+
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            overflow-x: hidden;
+            overflow-y:auto;
+            overscroll-behavior-y:auto;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #0b1020;
+            color: white;
+        }
+
+        .cloud-app {
+            min-height: 100dvh;
+            width: 100%;
+            background: #111827;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            height: 100dvh;
+            background: #111827;
+            border-right: 1px solid rgba(255,255,255,.08);
+        }
+
+        .brand {
+            height: 75px;
+            display: flex;
+            align-items: center;
+            padding: 0 22px;
+            font-size: 24px;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,.07);
+        }
+
+        .brand span {
+            margin-right: 10px;
+        }
+
+        .profile {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .profile-status {
+            color: #22c55e;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .section-title {
+            padding: 10px 20px;
+            color: #94a3b8;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chat-user {
+            margin: 8px 12px;
+            padding: 14px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(99,102,241,.15);
+        }
+
+        .chat-avatar {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#ec4899,#8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .chat-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-name {
+            font-weight: 600;
+        }
+
+        .chat-preview {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            min-width: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        .logout-area {
+            margin-top: auto;
+            padding: 18px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 10px;
+            background: transparent;
+            color: #cbd5e1;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,.05);
+        }
+
+        /* CHAT */
+
+        .chat-area {
+            height: 100dvh;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background: #111827;
+        }
+
+        /* HEADER */
+
+        .chat-header {
+            height: 75px;
+            min-height: 75px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+            background: #111827;
+        }
+
+        .header-avatar {
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#ec4899,#8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .header-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .header-name {
+            font-weight: 700;
+            font-size: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-status {
+            color: #22c55e;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .viewer-badge {
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: rgba(148,163,184,.12);
+            color: #cbd5e1;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        /* MOBILE LOGOUT */
+
+        .mobile-logout {
+            display: none;
+        }
+
+        .mobile-logout-btn {
+            border: 1px solid rgba(255,255,255,.15);
+            background: transparent;
+            color: #cbd5e1;
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        /* MESSAGES */
+
+            .messages {
+                flex: 1;
+                min-height: 0;
+                padding: 24px 28px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                scroll-behavior: smooth;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+                background: radial-gradient( circle at top right, rgba(99,102,241,.08), transparent 35% );
+            }
+
+        .date-label {
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 22px;
+        }
+
+        .message-row {
+            display: flex;
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 0 4px;
+        }
+
+        /* SENT = LEFT */
+
+        .message-row.me {
+            justify-content: flex-start;
+        }
+
+        /* RECEIVED = RIGHT */
+
+        .message-row:not(.me) {
+            justify-content: flex-end;
+        }
+
+        .message {
+            max-width: min(70%,520px);
+            padding: 10px 14px 7px;
+            border-radius: 18px;
+            position: relative;
+            line-height: 1.45;
+            font-size: 14px;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .message.other {
+            background: #1e293b;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.me {
+            background: linear-gradient(135deg,#6366f1,#7c3aed);
+            border-bottom-left-radius: 5px;
+        }
+
+        .sender-name {
+            font-size: 11px;
+            color: #a5b4fc;
+            margin-bottom: 3px;
+            font-weight: 600;
+        }
+
+        .message-bottom {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 3px;
+            margin-top: 4px;
+        }
+
+        .message-time {
+            font-size: 10px;
+            opacity: .55;
+            white-space: nowrap;
+        }
+
+        .seen {
+            color: #93c5fd;
+            font-size: 11px;
+        }
+
+        /* TYPING */
+
+        .typing {
+            color: #64748b;
+            font-size: 12px;
+            padding: 0 5px 10px;
+            display: none;
+        }
+
+        /* INPUT */
+
+        .input-area {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255,255,255,.08);
+            background: #111827;
+        }
+
+        .input-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 18px;
+            padding: 7px 9px 7px 16px;
+        }
+
+        .input-box input {
+            flex: 1;
+            min-width: 0;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: white;
+            font-size: 14px;
+        }
+
+        .input-box input::placeholder {
+            color: #64748b;
+        }
+
+        .emoji-btn,
+        .send-btn {
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .emoji-btn {
+            background: transparent;
+            font-size: 21px;
+        }
+
+        .send-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            color: white;
+            font-size: 18px;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.04);
+        }
+
+        .viewer-message {
+            text-align: center;
+            padding: 12px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        /* MOBILE */
+
+        @@media (max-width: 767.98px) {
+
+            .chat-header {
+                height: 64px;
+                min-height: 64px;
+                padding: 0 10px;
+            }
+
+            .header-avatar {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                margin-right: 9px;
+            }
+
+            .header-name {
+                font-size: 14px;
+            }
+
+            .header-status {
+                font-size: 11px;
+            }
+
+            .viewer-badge {
+                display: none;
+            }
+
+            .mobile-logout {
+                display: block;
+                margin-left: 7px;
+            }
+
+            .mobile-logout-btn {
+                font-size: 11px;
+                padding: 6px 8px;
+            }
+
+            .messages {
+                padding: 16px 10px;
+            }
+
+            .date-label {
+                margin-bottom: 16px;
+            }
+
+            .message-row {
+                padding: 0;
+                margin-bottom: 8px;
+            }
+
+            .message {
+                max-width: 82%;
+                font-size: 14px;
+                padding: 9px 12px 6px;
+            }
+
+            .input-area {
+                padding: 8px 9px;
+            }
+
+            .input-box {
+                padding: 5px 7px 5px 12px;
+                border-radius: 16px;
+            }
+
+            .input-box input {
+                font-size: 14px;
+            }
+
+            .emoji-btn {
+                font-size: 19px;
+            }
+
+            .send-btn {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                border-radius: 11px;
+            }
+
+            .typing {
+                padding: 0 10px 6px;
+            }
+        }
+
+        @@media (max-width: 380px) {
+
+            .header-name {
+                font-size: 13px;
+            }
+
+            .message {
+                max-width: 86%;
+            }
+
+            .mobile-logout-btn {
+                padding: 5px 7px;
+                font-size: 10px;
+            }
+        }
+            /* =========================
+               DELETE MESSAGE BUTTON
+               ========================= */
+
+            .delete-my-messages-btn {
+                flex-shrink: 0;
+                width: auto;
+                min-width: 90px;
+                height: 42px;
+                padding: 0 14px;
+                border: none;
+                border-radius: 10px;
+                background: #ef4444;
+                color: #ffffff;
+                font-size: 14px;
+                font-weight: 600;
+                white-space: nowrap;
+                overflow: hidden;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                cursor: pointer;
+                margin-left: auto;
+                box-sizing: border-box;
+                transition: 0.2s ease;
+            }
+
+                .delete-my-messages-btn:hover {
+                    background: #dc2626;
+                }
+
+                .delete-my-messages-btn:active {
+                    transform: scale(0.96);
+                }
+
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container-fluid p-0 cloud-app">
+
+        <div class="row g-0 h-100">
+
+            <!-- SIDEBAR -->
+
+            <aside class="sidebar col-md-4 col-lg-3 d-none d-md-flex flex-column">
+
+                <div class="brand">
+                    <span>☁️</span>
+                    CloudDesk
+                </div>
+
+                <div class="profile">
+
+                    <div class="avatar">
+                        @displayName.Substring(0, 1).ToUpper()
+                    </div>
+
+                    <div>
+
+                        <div class="profile-name">
+                            @displayName
+                        </div>
+
+                        <div class="profile-status">
+                            ● Online
+                        </div>
+
+                    </div>
+
+                </div>
+
+                @* <div class="section-title">
+                    Conversation
+                </div> *@
+
+                <div class="chat-user">
+
+                    @* <div class="chat-avatar">
+                        ❤️
+                    </div> *@
+
+                    <div class="chat-info">
+
+                        @* <div class="chat-name">
+                            Private Chat
+                        </div> *@
+
+                        @* <div class="chat-preview">
+
+                            @if (isViewer)
+                            {
+                                @:Viewing conversation
+                            }
+                            else
+                            {
+                                @:Private conversation
+                            }
+
+                        </div> *@
+
+                    </div>
+
+                    <div class="online-dot"
+                         id="onlineDot">
+                    </div>
+
+                </div>
+
+                <div class="logout-area mt-auto">
+
+                    <form asp-controller="Account"
+                          asp-action="Logout"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <button class="logout-btn"
+                                type="submit">
+
+                            Logout
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </aside>
+           
+            <!-- CHAT -->
+
+            <main class="chat-area col-12 col-md-8 col-lg-9">
+
+                <header class="chat-header">
+
+                    <div class="header-avatar">
+                        ॅ
+                    </div>
+
+                    <div class="header-info">
+
+                        <div class="header-name">
+                            @ViewBag.ChatPartnerName
+                        </div>
+
+                        <div class="header-status" id="headerStatus">
+                            ● offline
+                        </div>
+                       
+                    </div>
+
+                    <button type="button"
+                            class="delete-my-messages-btn"
+                            onclick="deleteMyMessages()"
+                            title="Delete my messages">
+                        🗑 Delete
+                    </button>
+
+                    @if (isViewer)
+                    {
+                        <div class="viewer-badge">
+                            👀 View Only
+                        </div>
+                    }
+
+                    <!-- Mobile Logout -->
+
+                    <div class="mobile-logout">
+
+                        <form asp-controller="Account"
+                              asp-action="Logout"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <button type="submit"
+                                    class="mobile-logout-btn">
+
+                                Logout
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </header>
+                <!-- =========================
+                     MESSAGES
+                ========================== -->
+
+                <section class="messages"
+                         id="messages">
+
+                    <div class="date-label">
+                        Today
+                    </div>
+
+                </section>
+
+
+                @if (!isViewer)
+                {
+                    <!-- TYPING -->
+
+                    <div class="typing"
+                         id="typing">
+
+                        User is typing...
+
+                    </div>
+
+
+                    <!-- INPUT -->
+
+                    <div class="input-area">
+
+                        <div class="input-box">
+
+                            <button class="emoji-btn"
+                                    type="button"
+                                    onclick="addEmoji()">
+
+                                😊
+
+                            </button>
+
+                            <input type="text"
+                                   id="messageInput"
+                                   name="messageInput"
+                                   placeholder="Type a message..."
+                                   autocomplete="new-password"
+                                   autocorrect="off"
+                                   autocapitalize="sentences"
+                                   spellcheck="false"
+                                   inputmode="text" />
+
+                            <button class="send-btn"
+                                    type="button"
+                                    onclick="sendMessage()">
+
+                                ➤
+
+                            </button>
+
+                        </div>
+
+                    </div>
+                }
+                else
+                {
+                    <div class="viewer-message">
+
+                        👀 You are viewing this conversation
+
+                    </div>
+                }
+
+            </main>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================== -->
+
+    <script>
+
+            // =========================
+            // CHAT PARTNER
+            // =========================
+
+            const chatPartnerId =
+                "@ViewBag.ChatPartnerId";
+
+
+            // =========================
+            // CURRENT USER ID
+            // =========================
+
+            const currentUserId =
+                "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+
+
+            // =========================
+            // SIGNALR CONNECTION
+            // =========================
+
+            const connection =
+                new signalR.HubConnectionBuilder()
+                    .withUrl("/chatHub")
+                    .withAutomaticReconnect()
+                    .build();
+
+
+            // =========================
+            // RECEIVE NEW MESSAGE
+            // =========================
+
+            connection.on(
+                "ReceiveMessage",
+                function(
+                    senderName,
+                    message,
+                    time,
+                    senderId
+                ) {
+
+                    addMessage(
+                        senderName,
+                        message,
+                        time,
+                        senderId
+                    );
+
+                }
+            );
+
+
+            // =========================
+            // MESSAGES DELETED
+            // =========================
+
+            connection.on(
+                "MyMessagesDeleted",
+                function(deletedUserId) {
+
+                    location.reload();
+
+                }
+            );
+
+
+            // =========================
+            // ONLINE / OFFLINE
+            // =========================
+
+            connection.on(
+                "UserStatus",
+                function(
+                    userId,
+                    isOnline
+                ) {
+
+                    if (
+                        String(userId).trim() ===
+                        String(chatPartnerId).trim()
+                    ) {
+
+                        updatePartnerStatus(
+                            isOnline
+                        );
+
+                    }
+
+                }
+            );
+
+
+            // =========================
+            // TYPING
+            // =========================
+
+            connection.on(
+                "UserTyping",
+                function(
+                    userName
+                ) {
+
+                    if (
+                        userName ===
+                        "@displayName"
+                    )
+                        return;
+
+
+                    const typing =
+                        document.getElementById(
+                            "typing"
+                        );
+
+
+                    if (!typing)
+                        return;
+
+
+                    typing.textContent =
+                        userName +
+                        " is typing...";
+
+
+                    typing.style.display =
+                        "block";
+
+
+                    clearTimeout(
+                        window.typingTimer
+                    );
+
+
+                    window.typingTimer =
+                        setTimeout(
+                            function() {
+
+                                typing.style.display =
+                                    "none";
+
+                            },
+                            1500
+                        );
+
+                }
+            );
+
+
+            // =========================
+            // UPDATE PARTNER STATUS
+            // =========================
+
+            function updatePartnerStatus(
+                isOnline
+            ) {
+
+                const headerStatus =
+                    document.getElementById(
+                        "headerStatus"
+                    );
+
+
+                const onlineDot =
+                    document.getElementById(
+                        "onlineDot"
+                    );
+
+
+                if (isOnline) {
+
+                    if (headerStatus) {
+
+                        headerStatus.textContent =
+                            "● Online";
+
+                        headerStatus.style.color =
+                            "#22c55e";
+
+                    }
+
+
+                    if (onlineDot) {
+
+                        onlineDot.style.background =
+                            "#22c55e";
+
+                    }
+
+                }
+                else {
+
+                    if (headerStatus) {
+
+                        headerStatus.textContent =
+                            "● Offline";
+
+                        headerStatus.style.color =
+                            "#64748b";
+
+                    }
+
+
+                    if (onlineDot) {
+
+                        onlineDot.style.background =
+                            "#64748b";
+
+                    }
+
+                }
+
+            }
+
+
+            // =========================
+            // FORMAT MESSAGE TIME
+            // =========================
+
+            function formatMessageTime(
+                dateValue
+            ) {
+
+                const date =
+                    new Date(dateValue);
+
+
+                if (
+                    isNaN(
+                        date.getTime()
+                    )
+                ) {
+
+                    return dateValue;
+
+                }
+
+
+                const now =
+                    new Date();
+
+
+                const today =
+                    date.toDateString() ===
+                    now.toDateString();
+
+
+                if (today) {
+
+                    return date.toLocaleTimeString(
+                        [],
+                        {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }
+                    );
+
+                }
+
+
+                const yesterday =
+                    new Date();
+
+
+                yesterday.setDate(
+                    yesterday.getDate() - 1
+                );
+
+
+                if (
+                    date.toDateString() ===
+                    yesterday.toDateString()
+                ) {
+
+                    return "Yesterday, " +
+                        date.toLocaleTimeString(
+                            [],
+                            {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                            }
+                        );
+
+                }
+
+
+                return date.toLocaleDateString(
+                    [],
+                    {
+                        day: "2-digit",
+                        month: "short"
+                    }
+                ) +
+                    ", " +
+                    date.toLocaleTimeString(
+                        [],
+                        {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }
+                    );
+
+            }
+
+
+            // =========================
+            // ADD MESSAGE TO SCREEN
+            // =========================
+
+            function addMessage(
+                senderName,
+                text,
+                time,
+                senderId
+            ) {
+
+                const messages =
+                    document.getElementById(
+                        "messages"
+                    );
+
+
+                if (!messages)
+                    return;
+
+
+                const row =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                const isMe =
+                    String(senderId).trim() ===
+                    String(currentUserId).trim();
+
+
+                row.className =
+                    isMe
+                        ? "message-row me"
+                        : "message-row";
+
+
+                const messageDiv =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                messageDiv.className =
+                    isMe
+                        ? "message me"
+                        : "message other";
+
+
+                // Sender name for received message
+
+                if (!isMe) {
+
+                    const sender =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    sender.className =
+                        "sender-name";
+
+
+                    sender.textContent =
+                        senderName;
+
+
+                    messageDiv.appendChild(
+                        sender
+                    );
+
+                }
+
+
+                // Message text
+
+                const textNode =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                textNode.textContent =
+                    text;
+
+
+                messageDiv.appendChild(
+                    textNode
+                );
+
+
+                // Bottom
+
+                const bottom =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                bottom.className =
+                    "message-bottom";
+
+
+                // Time
+
+                const timeSpan =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                timeSpan.className =
+                    "message-time";
+
+
+                timeSpan.textContent =
+                    formatMessageTime(
+                        time
+                    );
+
+
+                bottom.appendChild(
+                    timeSpan
+                );
+
+
+                // Check mark for own message
+
+                if (isMe) {
+
+                    const seen =
+                        document.createElement(
+                            "span"
+                        );
+
+
+                    seen.className =
+                        "seen";
+
+
+                    seen.textContent =
+                        "✓";
+
+
+                    bottom.appendChild(
+                        seen
+                    );
+
+                }
+
+
+                messageDiv.appendChild(
+                    bottom
+                );
+
+
+                row.appendChild(
+                    messageDiv
+                );
+
+
+                messages.appendChild(
+                    row
+                );
+
+
+                // Scroll to latest message
+
+                setTimeout(
+                    function() {
+
+                        messages.scrollTop =
+                            messages.scrollHeight;
+
+                    },
+                    50
+                );
+
+            }
+
+
+            // =========================
+            // LOAD SAVED MESSAGES
+            // =========================
+
+            async function loadOldMessages() {
+
+                try {
+
+                    const oldMessages =
+                        await connection.invoke(
+                            "GetMessages"
+                        );
+
+
+                    if (
+                        !oldMessages ||
+                        oldMessages.length === 0
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    oldMessages.forEach(
+                        function(message) {
+
+                            addMessage(
+                                message.senderName,
+                                message.text,
+                                message.sentAt,
+                                message.senderId
+                            );
+
+                        }
+                    );
+
+
+                    // After all old messages load,
+                    // go to latest message
+
+                    setTimeout(
+                        function() {
+
+                            const messages =
+                                document.getElementById(
+                                    "messages"
+                                );
+
+
+                            if (messages) {
+
+                                messages.scrollTop =
+                                    messages.scrollHeight;
+
+                            }
+
+                        },
+                        100
+                    );
+
+                }
+                catch (err) {
+
+                    console.error(
+                        "GetMessages error:",
+                        err
+                    );
+
+                }
+
+            }
+
+
+            // =========================
+            // SEND MESSAGE
+            // =========================
+
+            async function sendMessage() {
+
+                const input =
+                    document.getElementById(
+                        "messageInput"
+                    );
+
+
+                if (!input)
+                    return;
+
+
+                const text =
+                    input.value.trim();
+
+
+                if (text === "")
+                    return;
+
+
+                try {
+
+                    await connection.invoke(
+                        "SendMessage",
+                        text
+                    );
+
+
+                    input.value = "";
+
+                    input.focus();
+
+
+                    // Scroll after sending
+
+                    setTimeout(
+                        function() {
+
+                            const messages =
+                                document.getElementById(
+                                    "messages"
+                                );
+
+
+                            if (messages) {
+
+                                messages.scrollTop =
+                                    messages.scrollHeight;
+
+                            }
+
+                        },
+                        100
+                    );
+
+                }
+                catch (err) {
+
+                    console.error(
+                        "SendMessage error:",
+                        err
+                    );
+
+                }
+
+            }
+
+
+            // =========================
+            // DELETE MY MESSAGES
+            // =========================
+
+            async function deleteMyMessages() {
+
+                const confirmDelete =
+                    confirm(
+                        "Kya aap apne bheje hue sabhi messages delete karna chahte hain?"
+                    );
+
+
+                if (!confirmDelete)
+                    return;
+
+
+                try {
+
+                    await connection.invoke(
+                        "DeleteMyMessages"
+                    );
+
+                }
+                catch (err) {
+
+                    console.error(
+                        "Delete messages error:",
+                        err
+                    );
+
+
+                    alert(
+                        "Messages delete nahi ho paye."
+                    );
+
+                }
+
+            }
+
+
+            // =========================
+            // EMOJI
+            // =========================
+
+            function addEmoji() {
+
+                const input =
+                    document.getElementById(
+                        "messageInput"
+                    );
+
+
+                if (!input)
+                    return;
+
+
+                input.value +=
+                    " ❤️";
+
+
+                input.focus();
+
+            }
+
+
+            // =========================
+            // ENTER = SEND
+            // =========================
+
+            const input =
+                document.getElementById(
+                    "messageInput"
+                );
+
+
+            if (input) {
+
+                input.addEventListener(
+                    "keydown",
+                    function(event) {
+
+                        if (
+                            event.key ===
+                            "Enter"
+                        ) {
+
+                            event.preventDefault();
+
+                            sendMessage();
+
+                        }
+
+                    }
+                );
+
+
+                // Typing detection
+
+                input.addEventListener(
+                    "input",
+                    async function() {
+
+                        if (
+                            connection.state ===
+                            "Connected"
+                        ) {
+
+                            try {
+
+                                await connection.invoke(
+                                    "Typing"
+                                );
+
+                            }
+                            catch (err) {
+
+                                console.error(
+                                    "Typing error:",
+                                    err
+                                );
+
+                            }
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            // =========================
+            // START CONNECTION
+            // =========================
+
+            async function startConnection() {
+
+                try {
+
+                    await connection.start();
+
+                    console.log(
+                        "SignalR connected."
+                    );
+
+
+                    // Check partner status
+
+                    const isOnline =
+                        await connection.invoke(
+                            "IsUserOnline",
+                            chatPartnerId
+                        );
+
+
+                    updatePartnerStatus(
+                        isOnline
+                    );
+
+
+                    // Load saved messages
+
+                    await loadOldMessages();
+
+                }
+                catch (err) {
+
+                    console.error(
+                        "SignalR connection error:",
+                        err
+                    );
+
+
+                    setTimeout(
+                        startConnection,
+                        5000
+                    );
+
+                }
+
+            }
+
+
+            // =========================
+            // START SIGNALR
+            // =========================
+
+            startConnection();
+
+
+            // =========================
+            // INITIAL SCROLL
+            // =========================
+
+            const messages =
+                document.getElementById(
+                    "messages"
+                );
+
+
+            if (messages) {
+
+                setTimeout(
+                    function() {
+
+                        messages.scrollTop =
+                            messages.scrollHeight;
+
+                    },
+                    100
+                );
+
+            }
+
+    </script>
+
+</body>
+
+</html>
